@@ -85,9 +85,9 @@ State change from WAIT_BS to WAIT_GSP
 State change from WAIT_GSP to ATTACHED
 ```
 
-Using the Nabto *Echo Stream Tester* you can now test the echo server by sending and receiving e.g. 1 MB of data:
+Using the Nabto [Echo Stream Tester](https://github.com/nabto/echo-stream-tester) you can now test the echo server by sending and receiving e.g. 1 MB of data:
 
 ```
-echo_stream_tester --deviceid <DEVICE ID> --datasize 1000000
+./echo_stream_tester <DEVICE ID> 1000000
 ```
 
