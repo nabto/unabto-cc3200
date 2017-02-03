@@ -95,8 +95,8 @@ void UNabto(void* pvParameters) {
     }
 }
 
-application_event_result application_event(application_request* request,
-                                           buffer_read_t* read_buffer,
-                                           buffer_write_t* write_buffer) {
+application_event_result application_event(application_request* appreq,
+		                                   unabto_query_request* r_b,
+										   unabto_query_response* w_b) {
     return AER_REQ_INV_QUERY_ID;
 }
