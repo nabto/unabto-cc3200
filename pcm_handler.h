@@ -1,7 +1,7 @@
 //*****************************************************************************
-// pinmux.c
+// pcm_handler.h
 //
-// configure the device pins for different signals
+// PCM Handler Interface
 //
 // Copyright (C) 2014 Texas Instruments Incorporated - http://www.ti.com/ 
 // 
@@ -36,70 +36,39 @@
 //
 //*****************************************************************************
 
-// This file was automatically generated on 7/21/2014 at 3:06:20 PM
-// by TI PinMux version 3.0.334
+#ifndef __PCMRENDERER_H__
+#define __PCMRENDERER_H__
+
+//*****************************************************************************
+//
+// If building with a C++ compiler, make all of the definitions in this header
+// have a C binding.
 //
 //*****************************************************************************
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+#define MCASP_AUD_WFIFO_SZ      16
+#define CB_EVENT_CONFIG_SZ      8
+#define WORD_SIZE               4
+#define HALF_WORD_SIZE          2
+#define CB_TRANSFER_SZ	        256
+#define END_PTR                 (CB_TRANSFER_SZ*2)-1
+//#define END_PTR                 (4096)-1
+#define CTRL_WRD                (3 | ((CB_TRANSFER_SZ - 1) << 4))
 
-
-#include "pinmux.h"
-#include "hw_types.h"
-#include "hw_memmap.h"
-#include "hw_gpio.h"
-#include "pin.h"
-#include "rom.h"
-#include "rom_map.h"
-#include "gpio.h"
-#include "prcm.h"
+extern void DMAPingPongCompleteAppCB_opt();    
+extern void SetupPingPongDMATransferTx(tCircularBuffer *pRecordBuffer);
+extern void SetupPingPongDMATransferRx(tCircularBuffer *pPlayBuffer);
 
 //*****************************************************************************
-void
-PinMuxConfig(void)
-{
-    //
-    // Enable Peripheral Clocks
-    //
-    MAP_PRCMPeripheralClkEnable(PRCM_I2S, PRCM_RUN_MODE_CLK);
-    MAP_PRCMPeripheralClkEnable(PRCM_UARTA0, PRCM_RUN_MODE_CLK);
-    MAP_PRCMPeripheralClkEnable(PRCM_I2CA0, PRCM_RUN_MODE_CLK);
-
-    //
-    // Configure PIN_50 for MCASP0 McAXR1
-    //
-    MAP_PinTypeI2S(PIN_50, PIN_MODE_6);
-
-    //
-    // Configure PIN_55 for UART0 UART0_TX
-    //
-    MAP_PinTypeUART(PIN_55, PIN_MODE_3);
-
-    //
-    // Configure PIN_57 for UART0 UART0_RX
-    //
-    MAP_PinTypeUART(PIN_57, PIN_MODE_3);
-
-    //
-    // Configure PIN_63 for MCASP0 McAFSX
-    //
-    MAP_PinTypeI2S(PIN_63, PIN_MODE_7);
-
-    //
-    // Configure PIN_64 for MCASP0 McAXR0
-    //
-    MAP_PinTypeI2S(PIN_64, PIN_MODE_7);
-
-    //
-    // Configure PIN_01 for I2C0 I2C_SCL
-    //
-    MAP_PinTypeI2C(PIN_01, PIN_MODE_1);
-
-    //
-    // Configure PIN_02 for I2C0 I2C_SDA
-    //
-    MAP_PinTypeI2C(PIN_02, PIN_MODE_1);
-
-    //
-    // Configure PIN_53 for MCASP0 McACLK
-    //
-    MAP_PinTypeI2S(PIN_53, PIN_MODE_2);
+//
+// Mark the end of the C bindings section for C++ compilers.
+//
+//*****************************************************************************
+#ifdef __cplusplus
 }
+#endif
+
+#endif //  __PCMRENDERER_H__

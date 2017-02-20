@@ -31,6 +31,16 @@
 			<locationURI>CC3200_SDK_ROOT/example/common/gpio_if.c</locationURI>
 		</link>
 		<link>
+			<name>i2c_if.c</name>
+			<type>1</type>
+			<locationURI>CC3200_SDK_ROOT/example/common/i2c_if.c</locationURI>
+		</link>
+		<link>
+			<name>i2s_if.c</name>
+			<type>1</type>
+			<locationURI>CC3200_SDK_ROOT/example/common/i2s_if.c</locationURI>
+		</link>
+		<link>
 			<name>network_common.c</name>
 			<type>1</type>
 			<locationURI>CC3200_SDK_ROOT/example/common/network_common.c</locationURI>
@@ -44,6 +54,11 @@
 			<name>uart_if.c</name>
 			<type>1</type>
 			<locationURI>CC3200_SDK_ROOT/example/common/uart_if.c</locationURI>
+		</link>
+		<link>
+			<name>udma_if.c</name>
+			<type>1</type>
+			<locationURI>CC3200_SDK_ROOT/example/common/udma_if.c</locationURI>
 		</link>
 	</linkedResources>
 	<variableList>

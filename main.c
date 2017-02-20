@@ -51,6 +51,8 @@
 #include "hw_memmap.h"
 #include "hw_types.h"
 #include "interrupt.h"
+#include "i2s.h"
+#include "udma.h"
 #include "prcm.h"
 #include "rom.h"
 #include "rom_map.h"
@@ -63,18 +65,29 @@
 
 // Common interface includes
 #include "common.h"
+#include "udma_if.h"
 #include "uart_if.h"
+#include "i2c_if.h"
 
 // App include
 #include "pinmux.h"
+#include "circ_buff.h"
+#include "audiocodec.h"
+#include "i2s_if.h"
+#include "pcm_handler.h"
+#include "audio_config.h"
 
 #define OSI_STACK_SIZE 2048
 
 //*****************************************************************************
 //                 GLOBAL VARIABLES -- Start
 //*****************************************************************************
+tCircularBuffer *pRecordBuffer;
+tCircularBuffer *pPlayBuffer;
+
 OsiTaskHandle g_NetworkTask = NULL;
 OsiTaskHandle g_UNabtoTask = NULL;
+OsiTaskHandle g_AudioTestTask = NULL;
 
 #if defined(ccs)
 extern void (*const g_pfnVectors[])(void);
@@ -91,6 +104,7 @@ extern uVectorEntry __vector_table;
 //******************************************************************************
 extern void Network(void *pvParameters);
 extern void UNabto(void *pvParameters);
+extern void AudioTest(void *pvParameters);
 
 extern void SHAMD5IntHandler(void);
 extern void AESIntHandler(void);
@@ -166,7 +180,7 @@ void vApplicationMallocFailedHook() {
 //*****************************************************************************
 static void DisplayBanner(void) {
     UART_PRINT("*************************************************\n\r");
-    UART_PRINT("                   CC3200 + uNabto               \n\r");
+    UART_PRINT("           CC3200 + uNabto + Audio               \n\r");
     UART_PRINT("*************************************************\n\r");
     UART_PRINT("\n\r");
 }
@@ -216,6 +230,15 @@ int main() {
     DisplayBanner();
 
     //
+	// Initialising the I2C Interface
+	//
+	lRetVal = I2C_IF_Open(I2C_MASTER_MODE_FST);
+	if (lRetVal < 0) {
+		ERR_PRINT(lRetVal);
+		LOOP_FOREVER();
+	}
+
+    //
     // Enable the crypto module
     //
     MAP_PRCMPeripheralClkEnable(PRCM_DTHE, PRCM_RUN_MODE_CLK);
@@ -225,6 +248,71 @@ int main() {
     //
     MAP_SHAMD5IntRegister(SHAMD5_BASE, SHAMD5IntHandler);
     MAP_AESIntRegister(AES_BASE, AESIntHandler);
+
+    //
+    // Create Record Buffer
+    //
+    pRecordBuffer = CreateCircularBuffer(RECORD_BUFFER_SIZE);
+    if (pRecordBuffer == NULL) {
+        UART_PRINT("Unable to Allocate Memory for Record Buffer\n\r");
+        LOOP_FOREVER();
+    }
+
+    //
+    // Create Play Buffer
+    //
+    pPlayBuffer = CreateCircularBuffer(PLAY_BUFFER_SIZE);
+    if (pPlayBuffer == NULL) {
+        UART_PRINT("Unable to Allocate Memory for Play Buffer\n\r");
+        LOOP_FOREVER();
+    }
+
+    //
+    // Configure Audio Codec
+    //
+    AudioCodecReset(AUDIO_CODEC_TI_3254, NULL);
+
+    AudioCodecConfig(AUDIO_CODEC_TI_3254, AUDIO_CODEC_16_BIT, 16000,
+                     AUDIO_CODEC_STEREO, AUDIO_CODEC_SPEAKER_ALL,
+                     AUDIO_CODEC_MIC_ALL);
+
+    AudioCodecSpeakerVolCtrl(AUDIO_CODEC_TI_3254, AUDIO_CODEC_SPEAKER_ALL, 50);
+
+    AudioCodecMicVolCtrl(AUDIO_CODEC_TI_3254, AUDIO_CODEC_MIC_ALL, 50);
+
+    //
+    // Initialize the Audio (I2S) Module
+    //
+    AudioInit();
+
+    //
+    // Initialize the DMA Module
+    //
+    UDMAInit();
+
+    // Tx (Play)
+    UDMAChannelSelect(UDMA_CH5_I2S_TX, NULL);
+    SetupPingPongDMATransferRx(pPlayBuffer);
+
+    // Rx (Record)
+    UDMAChannelSelect(UDMA_CH4_I2S_RX, NULL);
+    SetupPingPongDMATransferTx(pRecordBuffer);
+
+    //
+    // Setup the Audio In/Out
+    //
+    lRetVal = AudioSetupDMAMode(DMAPingPongCompleteAppCB_opt,
+                                CB_EVENT_CONFIG_SZ, I2S_MODE_RX_TX);
+    if (lRetVal < 0) {
+        ERR_PRINT(lRetVal);
+        LOOP_FOREVER();
+    }
+    AudioCaptureRendererConfigure(AUDIO_CODEC_16_BIT, 16000, AUDIO_CODEC_STEREO,
+                                  I2S_MODE_RX_TX, 1);
+    //
+    // Start Audio Tx/Rx
+    //
+    Audio_Start(I2S_MODE_RX_TX);
 
     //
     // Start the simplelink thread
@@ -254,6 +342,16 @@ int main() {
         ERR_PRINT(lRetVal);
         LOOP_FOREVER();
     }
+
+    //
+	// Start the Audio Test Task
+	//
+    lRetVal = osi_TaskCreate(AudioTest, (signed char *)"AudioTest", OSI_STACK_SIZE,
+                             NULL, 1, &g_AudioTestTask);
+	if (lRetVal < 0) {
+		ERR_PRINT(lRetVal);
+		LOOP_FOREVER();
+	}
 
     //
     // Start the task scheduler

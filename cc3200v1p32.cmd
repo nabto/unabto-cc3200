@@ -63,6 +63,7 @@ MEMORY
     /* (See also CC3200 Programmer's Guide "6.1.2 Bootloader and User Application – Sharing MCU RAM") */
     SRAM_CODE (RWX) : origin = 0x20004000, length = 0x19000         /* 100 KB */
     SRAM_DATA (RWX) : origin = 0x2001D000, length = 0x23000         /* 140 KB */
+    SRAM_DATA_SHARED (RWX) : origin = 0x20000000, length = 0x4000   /*  16 KB */
 }
 
 /* Section allocation in memory */
@@ -76,9 +77,9 @@ SECTIONS
     .const  :   > SRAM_CODE
     .cinit  :   > SRAM_CODE
     .pinit  :   > SRAM_CODE
-    .data   :   > SRAM_DATA
+    .data   :   > SRAM_DATA_SHARED //SRAM_DATA
     .bss    :   > SRAM_DATA
     .sysmem :   > SRAM_DATA
-    .stack  :   > SRAM_DATA(HIGH)
+    .stack  :   > SRAM_DATA_SHARED //SRAM_DATA(HIGH)
 }
 
