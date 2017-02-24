@@ -93,8 +93,8 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="unabto/src/platforms|unabto/src/modules|unabto/src/device_drivers|unabto/test|unabto/external|unabto/build|unabto/apps|unabto/3rdparty|wlan_station.cmd" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry excluding="unabto_sha256.c|unabto_hmac_sha256.c|unabto_aes.c|unabto_aes_cbc.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="unabto/src/modules/crypto/generic"/>
+						<entry excluding="audiotest.c|unabto/src/platforms|unabto/src/modules|unabto/src/device_drivers|unabto/test|unabto/external|unabto/build|unabto/apps|unabto/3rdparty|wlan_station.cmd" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

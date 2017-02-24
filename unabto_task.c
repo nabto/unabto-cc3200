@@ -26,7 +26,7 @@
 #include <unabto/unabto_app.h>
 #include <unabto/unabto_common_main.h>
 #include <unabto_version.h>
-#include "stream_echo.h"
+#include "stream_audio.h"
 
 //*****************************************************************************
 //                 GLOBAL VARIABLES -- Start
@@ -87,7 +87,7 @@ void UNabto(void* pvParameters) {
 
     srand(xTaskGetTickCount());
 
-    stream_echo_init();
+    stream_audio_init();
     unabto_init();
 
     while (true) {

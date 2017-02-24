@@ -346,12 +346,12 @@ int main() {
     //
 	// Start the Audio Test Task
 	//
-    lRetVal = osi_TaskCreate(AudioTest, (signed char *)"AudioTest", OSI_STACK_SIZE,
+    /*lRetVal = osi_TaskCreate(AudioTest, (signed char *)"AudioTest", OSI_STACK_SIZE,
                              NULL, 1, &g_AudioTestTask);
 	if (lRetVal < 0) {
 		ERR_PRINT(lRetVal);
 		LOOP_FOREVER();
-	}
+	}*/
 
     //
     // Start the task scheduler
