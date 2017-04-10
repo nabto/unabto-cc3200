@@ -23,47 +23,102 @@ int16_t stepTable[] = {
     15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767
 };
 
-int32_t leftStepIndex, rightStepIndex, leftPredicted, rightPredicted;
+int32_t leftStepIndexDec, rightStepIndexDec, leftPredictedDec, rightPredictedDec;
+int32_t leftStepIndexEnc, rightStepIndexEnc, leftPredictedEnc, rightPredictedEnc;
 
 void reset() {
-	leftStepIndex = rightStepIndex = 0;
-	leftPredicted = rightPredicted = 0;
+	leftStepIndexDec = rightStepIndexDec = 0;
+	leftPredictedDec = rightPredictedDec = 0;
+
+	leftStepIndexEnc = rightStepIndexEnc = 0;
+	leftPredictedEnc = rightPredictedEnc = 0;
 }
 
-void decode_and_play(const int8_t * input, size_t inputLen) {
+void decode_and_play(const int8_t * input, size_t size) {
+	//nabto_stamp_t start = nabtoGetStamp();
+
     size_t inputIndex;
-    int8_t output[4];
-    for (inputIndex = 0; inputIndex < inputLen; inputIndex++) {
+    uint8_t output[4*10];
+    size_t ptr = 0;
+    for (inputIndex = 0; inputIndex < size; inputIndex++) {
         int32_t leftCode = input[inputIndex] & 0xFF;
         int32_t rightCode = leftCode & 0xF;
         leftCode = leftCode >> 4;
-        int32_t leftStep = stepTable[leftStepIndex];
-        int32_t rightStep = stepTable[rightStepIndex];
-        leftPredicted += ((leftCode * leftStep) >> 2) - ((15 * leftStep) >> 3);
-        rightPredicted += ((rightCode * rightStep) >> 2) - ((15 * rightStep) >> 3);
-        if (leftPredicted > 32767) leftPredicted = 32767;
-        if (rightPredicted > 32767) rightPredicted = 32767;
-        if (leftPredicted < -32768) leftPredicted = -32768;
-        if (rightPredicted < -32768) rightPredicted = -32768;
-        output[0] = (int8_t) leftPredicted;
-        output[1] = (int8_t)(leftPredicted >> 8);
-        output[2] = (int8_t) rightPredicted;
-        output[3] = (int8_t)(rightPredicted >> 8);
-        leftStepIndex += stepIndexTable[leftCode];
-        rightStepIndex += stepIndexTable[rightCode];
-        if (leftStepIndex > 88) leftStepIndex = 88;
-        if (rightStepIndex > 88) rightStepIndex = 88;
-        if (leftStepIndex < 0) leftStepIndex = 0;
-        if (rightStepIndex < 0) rightStepIndex = 0;
+        int32_t leftStep = stepTable[leftStepIndexDec];
+        int32_t rightStep = stepTable[rightStepIndexDec];
+        leftPredictedDec += ((leftCode * leftStep) >> 2) - ((15 * leftStep) >> 3);
+        rightPredictedDec += ((rightCode * rightStep) >> 2) - ((15 * rightStep) >> 3);
+        if (leftPredictedDec > 32767) leftPredictedDec = 32767;
+        if (rightPredictedDec > 32767) rightPredictedDec = 32767;
+        if (leftPredictedDec < -32768) leftPredictedDec = -32768;
+        if (rightPredictedDec < -32768) rightPredictedDec = -32768;
+        output[ptr++] = leftPredictedDec;
+        output[ptr++] = (leftPredictedDec >> 8);
+        output[ptr++] = rightPredictedDec;
+        output[ptr++] = (rightPredictedDec >> 8);
+        leftStepIndexDec += stepIndexTable[leftCode];
+        rightStepIndexDec += stepIndexTable[rightCode];
+        if (leftStepIndexDec > 88) leftStepIndexDec = 88;
+        if (rightStepIndexDec > 88) rightStepIndexDec = 88;
+        if (leftStepIndexDec < 0) leftStepIndexDec = 0;
+        if (rightStepIndexDec < 0) rightStepIndexDec = 0;
 
-        long lRetVal = FillBuffer(pPlayBuffer, (unsigned char * ) output, 4);
-        if (lRetVal < 0) {
-            UART_PRINT("Unable to fill play buffer\n\r");
-            LOOP_FOREVER();
+        if(ptr >= 4*10) { // this speeds up the slow FillBuffer (chunked fill)
+        	long lRetVal = FillBuffer(pPlayBuffer, output, 4*10);
+			if (lRetVal < 0) {
+				UART_PRINT("Unable to fill play buffer\n\r");
+				LOOP_FOREVER();
+			}
+			ptr = 0;
         }
-        UpdateReadPtr(pRecordBuffer, 4);
     }
+
+    //nabto_stamp_t end = nabtoGetStamp();
+    //UART_PRINT("%u %lu\n\r", size, end - start);
 }
+
+
+bool record_and_encode(int8_t * output, size_t size) {
+	unsigned int available = GetBufferSize(pRecordBuffer);
+	if(available >= 4 * size) {
+		uint8_t *input = pRecordBuffer->pucReadPtr;
+
+		size_t inputIndex = 0, outputIndex;
+		for (outputIndex = 0; outputIndex < size; ++outputIndex) {
+
+			int32_t leftSample  = (int16_t)(( input[inputIndex]   & 0xff )|( input[inputIndex+1] << 8 ));
+			int32_t rightSample = (int16_t)(( input[inputIndex+2] & 0xff )|( input[inputIndex+3] << 8 ));
+			inputIndex += 4;
+
+		    int32_t leftStep = stepTable[leftStepIndexEnc];
+		    int32_t rightStep = stepTable[rightStepIndexEnc];
+		    int32_t leftCode = ((leftSample - leftPredictedEnc) * 4 + leftStep * 8) / leftStep;
+		    int32_t rightCode = ((rightSample - rightPredictedEnc) * 4 + rightStep * 8) / rightStep;
+			if (leftCode > 15) leftCode = 15;
+			if (rightCode > 15) rightCode = 15;
+			if (leftCode < 0) leftCode = 0;
+			if (rightCode < 0) rightCode = 0;
+			leftPredictedEnc += ((leftCode * leftStep) >> 2) - ((15 * leftStep) >> 3);
+			rightPredictedEnc += ((rightCode * rightStep) >> 2) - ((15 * rightStep) >> 3);
+			if (leftPredictedEnc > 32767) leftPredictedEnc = 32767;
+			if (rightPredictedEnc > 32767) rightPredictedEnc = 32767;
+			if (leftPredictedEnc < -32768) leftPredictedEnc = -32768;
+			if (rightPredictedEnc < -32768) rightPredictedEnc = -32768;
+			leftStepIndexEnc += stepIndexTable[leftCode];
+			rightStepIndexEnc += stepIndexTable[rightCode];
+			if (leftStepIndexEnc > 88) leftStepIndexEnc = 88;
+			if (rightStepIndexEnc > 88) rightStepIndexEnc = 88;
+			if (leftStepIndexEnc < 0) leftStepIndexEnc = 0;
+			if (rightStepIndexEnc < 0) rightStepIndexEnc = 0;
+			output[outputIndex] = (int8_t) ((leftCode << 4) | rightCode);
+		}
+
+		UpdateReadPtr(pRecordBuffer, 4 * size);
+		return true;
+	}
+	return false;
+}
+
 
 /**
  * Stream audio server
@@ -180,7 +235,9 @@ void unabto_stream_event(unabto_stream* stream, unabto_stream_event_type type) {
         if (readLength > 0) {
         	decode_and_play((const int8_t*) buf, readLength);
 
-            size_t writeLength =
+        	/*
+        	// loop back client audio
+        	size_t writeLength =
                 unabto_stream_write(stream, buf, readLength, &hint);
             if (writeLength > 0) {
                 if (!unabto_stream_ack(stream, buf, writeLength, &hint)) {
@@ -191,6 +248,19 @@ void unabto_stream_event(unabto_stream* stream, unabto_stream_event_type type) {
                     echo->state = STREAM_STATE_CLOSING;
                 }
             }
+        	*/
+
+        	// send recorded audio
+        	if (!unabto_stream_ack(stream, buf, readLength, &hint)) {
+				echo->state = STREAM_STATE_CLOSING;
+			} else if(record_and_encode((int8_t *)buf, readLength)) {
+        		size_t writeLength =
+					unabto_stream_write(stream, buf, readLength, &hint);
+				if (writeLength <= 0 && hint != UNABTO_STREAM_HINT_OK) {
+					echo->state = STREAM_STATE_CLOSING;
+				}
+        	}
+
         } else {
             if (hint != UNABTO_STREAM_HINT_OK) {
                 echo->state = STREAM_STATE_CLOSING;
