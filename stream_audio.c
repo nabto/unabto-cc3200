@@ -34,16 +34,17 @@ typedef struct {
 } audio_stream;
 
 audio_stream audio_streams[NABTO_MEMORY_STREAM_MAX_STREAMS];
+int8_t encodedBuf[2048];
 
 void stream_audio_init() {
     memset(audio_streams, 0, sizeof(audio_streams));
 }
 
 void unabto_stream_accept(unabto_stream* stream) {
-    audio_stream* echo = &audio_streams[unabto_stream_index(stream)];
-    UNABTO_ASSERT(echo->state == STREAM_STATE_IDLE);
-    memset(echo, 0, sizeof(audio_stream));
-    echo->state = STREAM_STATE_READ_COMMAND;
+    audio_stream* audio = &audio_streams[unabto_stream_index(stream)];
+    UNABTO_ASSERT(audio->state == STREAM_STATE_IDLE);
+    memset(audio, 0, sizeof(audio_stream));
+    audio->state = STREAM_STATE_READ_COMMAND;
 }
 
 void unabto_stream_event(unabto_stream* stream, unabto_stream_event_type type) {
@@ -113,28 +114,23 @@ void unabto_stream_event(unabto_stream* stream, unabto_stream_event_type type) {
     }
 
     if (audio->state == STREAM_STATE_FORWARDING) {
-        const uint8_t* buf;
-        unabto_stream_hint hint;
-        size_t readLength = unabto_stream_read(stream, &buf, &hint);
-
-        if (readLength > 0) {
-        	size_t playLength = adpcm_decode_and_play((const int8_t*)buf, readLength);
-
-        	// ack consumed bytes
-        	if (!unabto_stream_ack(stream, buf, playLength, &hint)) {
+		const uint8_t* buf;
+		unabto_stream_hint hint;
+		size_t readLength = unabto_stream_read(stream, &buf, &hint);
+		if (readLength > 0) {
+			adpcm_decode_and_play((const int8_t*)buf, readLength);
+			if (!unabto_stream_ack(stream, buf, readLength, &hint)) {
 				audio->state = STREAM_STATE_CLOSING;
 			}
-
-        } else {
-            if (hint != UNABTO_STREAM_HINT_OK) {
-                audio->state = STREAM_STATE_CLOSING;
-            }
-        }
-
-        // send recorded audio
-        if(adpcm_record_and_encode((int8_t*)buf, readLength)) { // todo use another buffer
+		} else {
+			if (hint != UNABTO_STREAM_HINT_OK) {
+				audio->state = STREAM_STATE_CLOSING;
+			}
+		}
+		size_t encodedLen = adpcm_record_and_encode(encodedBuf, sizeof(encodedBuf));
+		if(encodedLen > 0) {
 			size_t writeLength =
-				unabto_stream_write(stream, buf, readLength, &hint);
+				unabto_stream_write(stream, (const uint8_t*)encodedBuf, encodedLen, &hint);
 			if (writeLength <= 0 && hint != UNABTO_STREAM_HINT_OK) {
 				audio->state = STREAM_STATE_CLOSING;
 			}
