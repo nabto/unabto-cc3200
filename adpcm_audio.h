@@ -4,11 +4,14 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include "circ_buff.h"
+
+#define ENCODING_RATIO 4
 
 void adpcm_reset_decoder();
 void adpcm_reset_encoder();
 
-void adpcm_decode_and_play(const int8_t * input, size_t size);
-size_t adpcm_record_and_encode(int8_t * output, size_t size);
+void adpcm_decode(tCircularBuffer *pCircularBuffer, const uint8_t * input, const size_t input_size);
+size_t adpcm_encode(tCircularBuffer *pCircularBuffer, uint8_t * output, const size_t output_size);
 
 #endif

@@ -278,7 +278,7 @@ int main() {
 
     AudioCodecSpeakerVolCtrl(AUDIO_CODEC_TI_3254, AUDIO_CODEC_SPEAKER_ALL, 50);
 
-    AudioCodecMicVolCtrl(AUDIO_CODEC_TI_3254, AUDIO_CODEC_MIC_ALL, 50);
+    AudioCodecMicVolCtrl(AUDIO_CODEC_TI_3254, AUDIO_CODEC_MIC_ALL, 100);
 
     //
     // Initialize the Audio (I2S) Module
@@ -342,16 +342,6 @@ int main() {
         ERR_PRINT(lRetVal);
         LOOP_FOREVER();
     }
-
-    //
-	// Start the Audio Test Task
-	//
-    /*lRetVal = osi_TaskCreate(AudioTest, (signed char *)"AudioTest", OSI_STACK_SIZE,
-                             NULL, 1, &g_AudioTestTask);
-	if (lRetVal < 0) {
-		ERR_PRINT(lRetVal);
-		LOOP_FOREVER();
-	}*/
 
     //
     // Start the task scheduler

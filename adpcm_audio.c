@@ -36,24 +36,13 @@ void adpcm_reset_encoder() {
 	leftPredictedEnc = rightPredictedEnc = 0;
 }
 
-void play(const uint8_t *buf, size_t size) {
-	for(;;) {
-		long lRetVal = FillBuffer(pPlayBuffer, (uint8_t*)buf, size);
-		if (lRetVal < 0) {
-			UART_PRINT("Play buffer full\n\r");
-		} else {
-			return;
-		}
-	}
-}
+void adpcm_decode(tCircularBuffer *pCircularBuffer, const uint8_t * input, const size_t input_size) {
+    uint8_t output[ENCODING_RATIO * 32]; // it's faster to fill buffer in chunks
+    unsigned int outputIndex = 0;
 
-void adpcm_decode_and_play(const int8_t * input, size_t size) {
-    uint8_t output[64]; // must be multiple of 4
-    size_t outputIndex = 0;
-
-    size_t inputIndex = 0;
-    while (inputIndex < size) {
-        int32_t leftCode = input[inputIndex++] & 0xFF;
+    unsigned int i;
+    for (i = 0; i < input_size; ++i) {
+        int32_t leftCode = input[i] & 0xFF;
         int32_t rightCode = leftCode & 0xF;
         leftCode = leftCode >> 4;
         int32_t leftStep = stepTable[leftStepIndexDec];
@@ -76,28 +65,31 @@ void adpcm_decode_and_play(const int8_t * input, size_t size) {
         if (rightStepIndexDec < 0) rightStepIndexDec = 0;
 
         if(outputIndex == sizeof(output)) {
-        	play(output, outputIndex);
+        	FillBuffer(pCircularBuffer, output, outputIndex);
         	outputIndex = 0;
         }
     }
 
     if(outputIndex > 0) {
-    	play(output, outputIndex);
+    	FillBuffer(pCircularBuffer, output, outputIndex);
     }
 }
 
-size_t adpcm_record_and_encode(int8_t * output, size_t size) {
-	size_t available = GetBufferSize(pRecordBuffer);
-	uint8_t *input = pRecordBuffer->pucReadPtr;
-
-	if(available < 4*2048) return 0;
+size_t adpcm_encode(tCircularBuffer *pCircularBuffer, uint8_t * output, const size_t output_size) {
+	if(GetBufferSize(pRecordBuffer) < ENCODING_RATIO * output_size) {
+		return 0;
+	}
 
 	size_t inputIndex = 0;
 	size_t outputIndex = 0;
-	while(available >= inputIndex + 4 && size > outputIndex) {
-		int32_t leftSample  = (int16_t)(( input[inputIndex]   & 0xff )|( input[inputIndex+1] << 8 ));
-		int32_t rightSample = (int16_t)(( input[inputIndex+2] & 0xff )|( input[inputIndex+3] << 8 ));
-		inputIndex += 4;
+	while(output_size > outputIndex) {
+		uint8_t b0 = ReadBufferByte(pCircularBuffer, inputIndex++);
+		uint8_t b1 = ReadBufferByte(pCircularBuffer, inputIndex++);
+		uint8_t b2 = ReadBufferByte(pCircularBuffer, inputIndex++);
+		uint8_t b3 = ReadBufferByte(pCircularBuffer, inputIndex++);
+
+		int32_t leftSample  = (int16_t)((b0 & 0xff)|(b1 << 8));
+		int32_t rightSample = (int16_t)((b2 & 0xff)|(b3 << 8));
 
 		int32_t leftStep = stepTable[leftStepIndexEnc];
 		int32_t rightStep = stepTable[rightStepIndexEnc];
@@ -120,11 +112,7 @@ size_t adpcm_record_and_encode(int8_t * output, size_t size) {
 		if (leftStepIndexEnc < 0) leftStepIndexEnc = 0;
 		if (rightStepIndexEnc < 0) rightStepIndexEnc = 0;
 
-		output[outputIndex++] = (int8_t) ((leftCode << 4) | rightCode);
-	}
-
-	if(inputIndex > 0) {
-		UpdateReadPtr(pRecordBuffer, inputIndex);
+		output[outputIndex++] = (uint8_t) ((leftCode << 4) | rightCode);
 	}
 
 	return outputIndex;

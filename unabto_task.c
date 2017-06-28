@@ -92,6 +92,7 @@ void UNabto(void* pvParameters) {
 
     while (true) {
         wait_event();
+        stream_audio_write();
     }
 }
 

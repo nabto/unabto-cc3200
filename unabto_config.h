@@ -10,5 +10,6 @@
 #define NABTO_ENABLE_STREAM         1
 #define NABTO_SET_TIME_FROM_ALIVE   0
 #define NABTO_ENABLE_LOGGING        1
+#define NABTO_STREAM_MAX_STREAMS 	1
 
 #endif
