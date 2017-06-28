@@ -304,6 +304,16 @@ ReadBuffer(tCircularBuffer *pCircularBuffer, unsigned char *pucBuffer,
     return(uiDataSize);
 }
 
+unsigned char
+ReadBufferByte(tCircularBuffer *pCircularBuffer, unsigned int uiByteOffset) {
+	int iOffset = (pCircularBuffer->pucReadPtr + uiByteOffset) - pCircularBuffer->pucBufferEndPtr;
+	if(iOffset <= 0) {
+		return *(pCircularBuffer->pucReadPtr + uiByteOffset);
+	} else {
+		return *(pCircularBuffer->pucBufferStartPtr + iOffset);
+	}
+}
+
 //*****************************************************************************
 //
 //! fills the buffer with zeores.

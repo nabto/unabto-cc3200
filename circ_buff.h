@@ -91,6 +91,8 @@ extern void UpdateWritePtr(tCircularBuffer *pCircularBuffer,
                            unsigned int uiPacketSize);
 extern long ReadBuffer(tCircularBuffer *pCircularBuffer,
                        unsigned char *pucBuffer, unsigned int uiDataSize);
+extern unsigned char ReadBufferByte(tCircularBuffer *pCircularBuffer,
+									unsigned int uiByteOffset);
 extern long FillZeroes(tCircularBuffer *pCircularBuffer,
 					   unsigned int uiPacketSize);
 extern unsigned int GetBufferSize(tCircularBuffer *pCircularBuffer);
