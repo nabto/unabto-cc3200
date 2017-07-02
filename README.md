@@ -10,6 +10,7 @@ This project turns the CC3200 into a Nabto streaming echo server. It uses FreeRT
 
 ```
 git clone --recursive https://github.com/nabto/unabto-cc3200.git
+git branch audio
 ```
 
 ## Step 2: Import Project into Code Composer Studio
@@ -34,7 +35,7 @@ If not done for previous SDK examples, open `cc3200-sdk\example\common\common.h`
     
 ## Step 4: Set Nabto Device ID and Key
 
-Enter your *Device ID* and *Key* from [developer.nabto.com](developer.nabto.com) in `unabto_task.c` lines 66 and 67:
+Enter your *Device ID* and *Key* from [portal.appmyproduct.com](portal.appmyproduct.com) in `unabto_task.c` lines 66 and 67:
 
 ```
     char* nabtoId = "<DEVICE ID>";
