@@ -63,7 +63,7 @@ int hctoi(const unsigned char h) {
 //!
 //*****************************************************************************
 void UNabto(void* pvParameters) {
-    // device id and key from developer.nabto.com
+    // device id and key from portal.appmyproduct.com
     const char* nabtoId = "<DEVICE ID>";
     const char* presharedKey = "<KEY>";
 
