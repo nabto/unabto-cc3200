@@ -50,6 +50,6 @@ Enter your *Device ID* and *Key* from [portal.appmyproduct.com](portal.appmyprod
 
 Please refer to the [CC31xx & CC32xx UniFlash Quick Start Guide](http://processors.wiki.ti.com/index.php/CC31xx_%26_CC32xx_UniFlash_Quick_Start_Guide#CC32xx_MCU_image_flashing) for flashing the image located in `<YOUR-CCS-WORSPACE>\unabto-cc3200\Release\unabto-cc3200.bin`.
 
-# Step 7: Stream Audio
+## Step 7: Stream Audio
 
 Get the Android Audio Stream Demo)[https://github.com/nabto/android-audio-stream-demo] App and connect to your CC3200 using the unqiue ID. You should now be able to hear the microphone (and line-in) input of the opposite device.
