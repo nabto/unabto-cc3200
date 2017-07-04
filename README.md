@@ -10,7 +10,8 @@ This project turns the CC3200 into a Nabto audio streaming device. It uses FreeR
 
 ```
 git clone --recursive https://github.com/nabto/unabto-cc3200.git
-git branch audio
+cd unabto-cc3200
+git checkout audio
 ```
 
 ## Step 2: Import Project into Code Composer Studio
