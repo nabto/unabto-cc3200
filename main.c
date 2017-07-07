@@ -77,6 +77,8 @@
 #include "pcm_handler.h"
 #include "audio_config.h"
 
+#include "read_keyid.h"
+
 #define OSI_STACK_SIZE 2048
 
 //*****************************************************************************
@@ -220,14 +222,17 @@ void BoardInit(void) {
 //******************************************************************************
 int main() {
     long lRetVal = -1;
+    unsigned char policyVal;
 
     BoardInit();
 
     PinMuxConfig();
 
     InitTerm();
-
     DisplayBanner();
+
+    lRetVal = readIdAndKey(nabtoId, presharedKey);
+
 
     //
 	// Initialising the I2C Interface
@@ -276,7 +281,7 @@ int main() {
                      AUDIO_CODEC_STEREO, AUDIO_CODEC_SPEAKER_ALL,
                      AUDIO_CODEC_MIC_ALL);
 
-    AudioCodecSpeakerVolCtrl(AUDIO_CODEC_TI_3254, AUDIO_CODEC_SPEAKER_ALL, 50);
+    AudioCodecSpeakerVolCtrl(AUDIO_CODEC_TI_3254, AUDIO_CODEC_SPEAKER_ALL, 100);
 
     AudioCodecMicVolCtrl(AUDIO_CODEC_TI_3254, AUDIO_CODEC_MIC_ALL, 100);
 

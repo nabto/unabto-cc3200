@@ -18,9 +18,11 @@
 #include "gpio_if.h"
 #include "rom_map.h"
 
+
 // Common interface includes
 #include "common.h"
 #include "uart_if.h"
+#include "read_keyid.h"
 
 // Nabto Includes
 #include <unabto/unabto_app.h>
@@ -53,6 +55,8 @@ int hctoi(const unsigned char h) {
     }
 }
 
+//_u8 preallok_filebuffer[256];
+
 //*****************************************************************************
 //
 //! uNabto Task
@@ -64,8 +68,15 @@ int hctoi(const unsigned char h) {
 //*****************************************************************************
 void UNabto(void* pvParameters) {
     // device id and key from portal.appmyproduct.com
-    const char* nabtoId = "<DEVICE ID>";
-    const char* presharedKey = "<KEY>";
+    //const char* nabtoId = "foofim.u.nabto.net";
+    //const char* presharedKey = "00000000000000000000000000000000";
+    //const char* nabtoId = "phavkzs3.smtth.appmyproduct.com";
+    //const char* presharedKey = "bd96af80e59d0d72c290807973fdb7f1";
+    
+    //char nabtoId[129];
+    //char presharedKey[33];
+
+  
 
     // Initialize uNabto
     nabto_main_setup* nms = unabto_init_context();

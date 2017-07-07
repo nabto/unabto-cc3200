@@ -77,7 +77,7 @@ SECTIONS
     .const  :   > SRAM_CODE
     .cinit  :   > SRAM_CODE
     .pinit  :   > SRAM_CODE
-    .data   :   > SRAM_DATA_SHARED //SRAM_DATA
+    .data   :   > SRAM_DATA_SHARED
     .bss    :   > SRAM_DATA
     .sysmem :   > SRAM_DATA
     .stack  :   > SRAM_DATA_SHARED //SRAM_DATA(HIGH)

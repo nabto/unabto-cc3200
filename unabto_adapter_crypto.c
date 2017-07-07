@@ -66,6 +66,8 @@ bool aes128_cbc_decrypt(const uint8_t *key, uint8_t *input,
     return aes128_cbc_crypt(key, input, input_len, AES_CFG_DIR_DECRYPT);
 }
 
+uint8_t tmp_buf[2048];
+
 void unabto_hmac_sha256_buffers(const buffer_t keys[], uint8_t keys_size,
                                 const buffer_t messages[],
                                 uint8_t messages_size, uint8_t *mac,
@@ -91,7 +93,8 @@ void unabto_hmac_sha256_buffers(const buffer_t keys[], uint8_t keys_size,
     for (i = 0; i < messages_size; i++) {
         message_size += messages[i].size;
     }
-    uint8_t *message = (uint8_t *)malloc(message_size);
+    //uint8_t *message = (uint8_t *)malloc(message_size);
+    uint8_t *message = tmp_buf;
     uint8_t *message_ptr = message;
     for (i = 0; i < messages_size; i++) {
         memcpy(message_ptr, messages[i].data, messages[i].size);
@@ -106,8 +109,13 @@ void unabto_hmac_sha256_buffers(const buffer_t keys[], uint8_t keys_size,
 
     // configure and generate hash
     MAP_SHAMD5ConfigSet(SHAMD5_BASE, SHAMD5_ALGO_HMAC_SHA256);
-    MAP_SHAMD5HMACKeySet(SHAMD5_BASE, key);
-    MAP_SHAMD5HMACProcess(SHAMD5_BASE, message, message_size, mac);
 
-    free(message);
+    MAP_SHAMD5HMACKeySet(SHAMD5_BASE, key);
+
+    uint8_t tmp_mac[32]; // To cope with possible truncated mac
+    MAP_SHAMD5HMACProcess(SHAMD5_BASE, message, message_size, tmp_mac);
+    memcpy(mac, tmp_mac, mac_size) ;
+
+
+    //free(message);
 }

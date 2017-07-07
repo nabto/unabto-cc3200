@@ -12,4 +12,7 @@
 #define NABTO_ENABLE_LOGGING        1
 #define NABTO_STREAM_MAX_STREAMS 	1
 
+#define NABTO_LOG_SEVERITY_FILTER                                  NABTO_LOG_SEVERITY_LEVEL_INFO
+//#define NABTO_LOG_SEVERITY_FILTER                                  NABTO_LOG_SEVERITY_LEVEL_TRACE
+
 #endif

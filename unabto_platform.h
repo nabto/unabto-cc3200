@@ -3,6 +3,8 @@
 
 #include <platforms/unabto_common_types.h>
 #include "unabto_platform_types.h"
+#include <osi.h>
+
 
 /**
 * Generic typedefs
@@ -33,6 +35,7 @@ typedef int ssize_t;
     do {                                     \
         UART_PRINT msg;                      \
         UART_PRINT("\r\n");                  \
+        osi_Sleep(50);                  \
     } while (0)
 
 /**
