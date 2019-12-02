@@ -34,7 +34,7 @@ If not done for previous SDK examples, open `cc3200-sdk\example\common\common.h`
     
 ## Step 4: Set Nabto Device ID and Key
 
-Enter your *Device ID* and *Key* from the [Nabto Cloud console](cloud.console.nabto.com) in `unabto_task.c` lines 66 and 67:
+Enter your *Device ID* and *Key* from the [Nabto Cloud console](https://cloud.console.nabto.com) in `unabto_task.c` lines 66 and 67:
 
 ```
     char* nabtoId = "<DEVICE ID>";
